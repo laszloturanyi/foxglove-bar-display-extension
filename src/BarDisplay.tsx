@@ -164,9 +164,8 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
               value: config.maxValue,
             },
             barColor: {
-              label: "Bar Color (Hex)",
-              input: "string",
-              placeholder: "e.g., #00ff00, #ff0000",
+              label: "Bar Color",
+              input: "rgb",
               value: config.barColor,
             },
             orientation: {
