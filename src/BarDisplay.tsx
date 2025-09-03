@@ -11,6 +11,8 @@ type Config = {
   maxValue?: number;
   barColor?: string;
   orientation?: 'horizontal' | 'vertical';
+  fillBehavior?: 'clamp' | 'ignore';
+  negateValue?: boolean;
 };
 
 // Helper function to parse topic.field format
@@ -53,9 +55,11 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
       maxValue = 100,
       barColor = "#00ff00",
       orientation = "horizontal",
+      fillBehavior = "clamp",
+      negateValue = false,
     } = partialConfig;
 
-    return { topicField, minValue, maxValue, barColor, orientation };
+    return { topicField, minValue, maxValue, barColor, orientation, fillBehavior, negateValue };
   });
 
   // Parse topic and field from topicField
@@ -136,6 +140,20 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
               ],
               value: config.orientation,
             },
+            fillBehavior: {
+              label: "Fill Behavior",
+              input: "select",
+              options: [
+                { value: "clamp", label: "Clamp (show min/max fill when out of range)" },
+                { value: "ignore", label: "Ignore (show zero when out of range)" },
+              ],
+              value: config.fillBehavior,
+            },
+            negateValue: {
+              label: "Negate Value",
+              input: "boolean",
+              value: config.negateValue,
+            },
           },
         },
       },
@@ -205,27 +223,38 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
             }
           }
           
-          setScalarValue(value);
+          if (value !== undefined) {
+            setScalarValue(config.negateValue ? -value : value);
+          }
         }
       }
     }
-  }, [messages, currentTopic, currentField]);
+  }, [messages, currentTopic, currentField, config.negateValue]);
 
   // invoke the done callback once the render is complete
   useEffect(() => {
     renderDone?.();
   }, [renderDone]);
 
-  // Calculate percentage based on min/max values
-  const percentage = useMemo(() => {
+  // Calculate percentage based on min/max values and fill behavior
+  const { percentage, displayValue } = useMemo(() => {
     if (scalarValue === undefined || config.minValue === undefined || config.maxValue === undefined) {
-      return 0;
+      return { percentage: 0, displayValue: undefined };
     }
+    
     const range = config.maxValue - config.minValue;
-    if (range === 0) return 0;
+    if (range === 0) return { percentage: 0, displayValue: scalarValue };
+    
+    const isInRange = scalarValue >= config.minValue && scalarValue <= config.maxValue;
+    
+    if (config.fillBehavior === 'ignore' && !isInRange) {
+      return { percentage: 0, displayValue: undefined };
+    }
+    
+    // Clamp behavior (default)
     const normalizedValue = Math.max(0, Math.min(100, ((scalarValue - config.minValue) / range) * 100));
-    return normalizedValue;
-  }, [scalarValue, config.minValue, config.maxValue]);
+    return { percentage: normalizedValue, displayValue: scalarValue };
+  }, [scalarValue, config.minValue, config.maxValue, config.fillBehavior]);
 
   return (
     <div style={{ 
@@ -241,7 +270,7 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
       <BarLevelIndicator 
         level={percentage} 
         color={config.barColor || "#00ff00"}
-        value={scalarValue}
+        value={displayValue}
         orientation={config.orientation || "horizontal"}
       />
     </div>
