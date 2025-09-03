@@ -67,20 +67,57 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
     return parseTopicField(config.topicField);
   }, [config.topicField]);
 
-  // Generate topic.field suggestions based on available topics
+  // Generate topic.field suggestions based on available topics and actual message data
   const topicFieldSuggestions = useMemo(() => {
     const suggestions: string[] = [];
+    const fieldSet = new Set<string>();
+    
+    // Helper function to recursively find numeric fields in an object
+    const findNumericFields = (obj: any, prefix: string = '') => {
+      if (obj && typeof obj === 'object') {
+        for (const key in obj) {
+          const fullPath = prefix ? `${prefix}.${key}` : key;
+          const value = obj[key];
+          
+          if (typeof value === 'number') {
+            fieldSet.add(fullPath);
+          } else if (value && typeof value === 'object') {
+            findNumericFields(value, fullPath);
+          }
+        }
+      }
+    };
+    
     (topics ?? []).forEach(topic => {
       // Add the base topic
       suggestions.push(topic.name);
-      // Add common field patterns
+      
+      // Find actual numeric fields from message data
+      const topicMessages = messages?.filter(msg => msg.topic === topic.name) ?? [];
+      const recentMessages = topicMessages.slice(-5); // Check last 5 messages for field discovery
+      
+      recentMessages.forEach(msg => {
+        findNumericFields(msg.message);
+      });
+      
+      // Add discovered fields for this topic
+      fieldSet.forEach(field => {
+        suggestions.push(`${topic.name}.${field}`);
+      });
+      
+      // Clear fieldSet for next topic
+      fieldSet.clear();
+      
+      // Also add common field patterns as fallback
       const commonFields = ['data', 'value', 'x', 'y', 'z', 'position', 'velocity', 'temperature', 'pressure'];
       commonFields.forEach(field => {
         suggestions.push(`${topic.name}.${field}`);
       });
     });
-    return suggestions;
-  }, [topics]);
+    
+    // Remove duplicates and sort
+    return Array.from(new Set(suggestions)).sort();
+  }, [topics, messages]);
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
@@ -111,9 +148,10 @@ function BarDisplay({ context }: { context: PanelExtensionContext }): JSX.Elemen
           fields: {
             topicField: {
               label: "Topic.Field",
-              input: "string",
+              input: "autocomplete",
               placeholder: "e.g., /my_topic.data or /sensor.temperature",
               value: config.topicField,
+              items: topicFieldSuggestions,
             },
             minValue: {
               label: "Min Value",
