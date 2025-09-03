@@ -68,7 +68,7 @@ const BarLevelIndicator: React.FC<BarLevelIndicatorProps> = ({ level, color = "#
     })
   };
 
-  const displayText = value !== undefined ? `${value.toFixed(2)}` : `${Math.floor(level)}%`;
+  const displayText = value !== undefined ? `${value.toFixed(2)}` : `${Math.floor(level)}`;
 
   return (
     <div style={barContainerStyle}>

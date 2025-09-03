@@ -1,23 +1,32 @@
 # Bar Display Extension
-This Foxglove extension provides a customizable bar display for visualizing scalar values from any topic. Users can configure min/max reference values and custom colors for the bar visualization.
+This Foxglove extension provides a highly customizable bar display for visualizing scalar values from any topic with configurable ranges, colors, orientations, and advanced fill behaviors.
 
-![Battery display 20% appearance](doc/20_percent.png)
-![Battery display 50% appearance](doc/50_percent.png)
-![Battery display 89% appearance](doc/89_percent.png)
+![Vertical Bar Display](doc/vertical.png)
+
+
+![Settings Panel](doc/settings.png)
 
 ## Features
 * **Universal Topic Support**: Works with any topic containing scalar numeric values
-* **Configurable Range**: Set custom min/max values for percentage calculation
-* **Custom Colors**: Use hex color codes to style the bar
-* **Smart Value Extraction**: Automatically finds numeric values in message fields (value, data, x, y, z, position, velocity, temperature, pressure, etc.)
-* **Dual Display**: Shows both the actual scalar value and percentage fill
-* **Smooth Animations**: Bar transitions with smooth visual effects
+* **Smart Field Detection**: Automatically discovers numeric fields in custom message formats and nested structures
+* **Autocomplete Topic Selection**: Dropdown with real-time suggestions for topic.field combinations
+* **Dual Orientation**: Horizontal and vertical bar orientations with proper panel resizing
+* **Advanced Fill Behaviors**: 
+  - **Clamp**: Shows min/max fill when values are out of range
+  - **Ignore**: Shows zero fill and hides value when out of range
+* **Value Processing**: Optional negation to invert input values
+* **Visual Color Picker**: Standard Foxglove color picker with hex color support
+* **Real-time Response**: No animation lag for fast oscillating data
+* **Nested Field Support**: Handles deeply nested fields (e.g., `pose.position.x`, `sensor.readings.temperature`)
 
 ## Configuration Options
-* **Topic**: Select any available topic from the dropdown
-* **Min Value**: Set the minimum reference value for 0% fill
-* **Max Value**: Set the maximum reference value for 100% fill  
-* **Bar Color**: Enter a hex color code (e.g., #00ff00, #ff0000) for the bar color
+* **Topic.Field**: Autocomplete input for selecting topic and field combinations
+* **Min Value**: Minimum reference value for 0% fill calculation
+* **Max Value**: Maximum reference value for 100% fill calculation
+* **Bar Color**: Visual color picker with hex color code support
+* **Orientation**: Choose between horizontal or vertical bar display
+* **Fill Behavior**: Select clamp or ignore behavior for out-of-range values
+* **Negate Value**: Toggle to invert input values (multiply by -1)
 
 ---
 
